@@ -90,15 +90,17 @@ impl InteractiveView {
     }
 
     fn draw_game(&self, ui: &mut Ui) {
-        egui::Grid::new("game_grid")
-            .min_col_width(ui.available_width() / 4.0)
-            .show(ui, |ui| {
-                let game = &self.game.as_ref().unwrap().game;
-                let mut entities = vec![game.player.get_base_entity()];
-                for enemy in &game.enemies {
-                    entities.push(enemy.get_base_entity());
-                }
+        let game = &self.game.as_ref().unwrap().game;
+        let mut entities = vec![game.player.get_base_entity()];
+        for enemy in &game.enemies {
+            entities.push(enemy.get_base_entity());
+        }
 
+        let col_width = ui.available_width() / (entities.len() + 1) as f32;
+        egui::Grid::new("game_grid")
+            .min_col_width(col_width)
+            .max_col_width(col_width)
+            .show(ui, move |ui| {
                 // Names
                 for entity in &entities {
                     ui.heading(&entity.name);
