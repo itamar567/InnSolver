@@ -10,3 +10,10 @@ rand = "0.8.5"
 
 egui = "0.21.0"
 eframe = "0.21.3"
+
+# Web-only dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1.7"
+tracing-wasm = "0.2.1"
+getrandom = { version = "0.2.8", features = ["js"] }
+wasm-bindgen-futures = "0.4.34"
