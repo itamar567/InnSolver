@@ -1,5 +1,6 @@
 use crate::game::entities::armors::Armor;
 use crate::game::entities::enemies::Challenge;
+use crate::gui::app::AppView;
 use crate::gui::options::{AIOptions, GameOptions};
 use crate::gui::widgets::number_input::unsigned_number_input;
 use egui::Ui;
@@ -7,6 +8,7 @@ use egui::Ui;
 pub struct SidePanelView {
     game_options: GameOptions,
     ai_options: AIOptions,
+    view: AppView,
 }
 
 impl SidePanelView {
@@ -14,11 +16,16 @@ impl SidePanelView {
         Self {
             game_options: GameOptions::default(),
             ai_options: AIOptions::default(),
+            view: AppView::default(),
         }
     }
 
     pub fn get_options(&self) -> (GameOptions, AIOptions) {
         (self.game_options.clone(), self.ai_options.clone())
+    }
+
+    pub fn set_current_view(&mut self, view: AppView) {
+        self.view = view;
     }
 
     pub fn draw(&mut self, ui: &mut Ui) {
@@ -72,11 +79,14 @@ impl SidePanelView {
                     });
             });
         });
-        ui.collapsing("AI Options", |ui| {
-            ui.horizontal(|ui| {
-                ui.label("Depth");
-                unsigned_number_input(ui, &mut self.ai_options.depth, 10, 2);
+
+        if matches!(self.view, AppView::AIAppView) {
+            ui.collapsing("AI Options", |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Depth");
+                    unsigned_number_input(ui, &mut self.ai_options.depth, 10, 2);
+                });
             });
-        });
+        }
     }
 }

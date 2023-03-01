@@ -6,9 +6,16 @@ use eframe::Frame;
 use egui::{Color32, Context, FontFamily, FontId, TextStyle, Ui};
 use std::collections::BTreeMap;
 
-enum AppView {
+#[derive(Clone)]
+pub enum AppView {
     AIAppView,
     InteractiveAppView,
+}
+
+impl Default for AppView {
+    fn default() -> Self {
+        Self::AIAppView
+    }
 }
 
 pub struct App {
@@ -24,11 +31,11 @@ pub struct App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        self.configure_panels();
+
         egui::SidePanel::right("configuration_panel").show(ctx, |ui| {
             self.draw_side_panel(ui);
         });
-
-        self.configure_panels();
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.draw_central_panel(ui);
@@ -62,7 +69,7 @@ impl App {
         Self {
             game_options: GameOptions::default(),
             ai_options: AIOptions::default(),
-            view: AppView::AIAppView,
+            view: AppView::default(),
             ai_view: AIView::new(),
             interactive_view: InteractiveView::new(),
             side_panel: SidePanelView::new(),
@@ -108,6 +115,7 @@ impl App {
 
         self.ai_view
             .configure(self.game_options.clone(), self.ai_options.clone());
-        self.interactive_view.configure(self.game_options.clone())
+        self.interactive_view.configure(self.game_options.clone());
+        self.side_panel.set_current_view(self.view.clone());
     }
 }
