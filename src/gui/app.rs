@@ -33,7 +33,7 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         self.configure_panels();
 
-        egui::SidePanel::right("configuration_panel").show(ctx, |ui| {
+        egui::SidePanel::right("configuration_panel").resizable(false).show(ctx, |ui| {
             self.draw_side_panel(ui);
         });
 
