@@ -56,6 +56,7 @@ impl AI {
         AI { game, depth }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn get_best_skill(&self) -> SkillEval {
         let (tx, rx) = mpsc::channel();
 
@@ -87,6 +88,39 @@ impl AI {
         let mut result = SkillEval::lost();
         for _ in 0..available_skills.len() {
             let val = rx.recv().unwrap();
+
+            if val > result {
+                result = val;
+            }
+        }
+
+        result
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn get_best_skill(&self) -> SkillEval {
+        let available_skills = self
+            .game
+            .player
+            .get_base_type()
+            .as_player()
+            .get_available_skills();
+
+        let mut result = SkillEval::lost();
+
+        for skill in available_skills.clone() {
+            let mut current_game = self.game.clone();
+
+            current_game
+                .player
+                .get_base_type_mut()
+                .as_player()
+                .set_current_skill(skill);
+            current_game.do_turn();
+
+            let ai_thread = AIThread::new(current_game, self.depth - 1);
+
+            let val = SkillEval::new(Some(skill), ai_thread.eval());
 
             if val > result {
                 result = val;
