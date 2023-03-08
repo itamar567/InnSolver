@@ -1,0 +1,59 @@
+<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+	
+		<title>InnSolver</title>
+
+		<script type="module">import init from '/inn_solver-884763547f945f95.js';init('/inn_solver-884763547f945f95_bg.wasm');</script>
+
+		<style>
+			html {
+				/* Remove touch delay: */
+				touch-action: manipulation;
+			}
+
+			/* Allow canvas to fill entire web page: */
+			html,
+			body {
+				overflow: hidden;
+				margin: 0 !important;
+				padding: 0 !important;
+				height: 100%;
+				width: 100%;
+			}
+
+			/* Position canvas in center-top: */
+			canvas {
+				margin-right: auto;
+				margin-left: auto;
+				display: block;
+				position: absolute;
+				top: 0%;
+				left: 50%;
+				transform: translate(-50%, 0%);
+			}
+
+			.centered {
+				margin-right: auto;
+				margin-left: auto;
+				display: block;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				color: #f0f0f0;
+				font-size: 24px;
+				font-family: Ubuntu-Light, Helvetica, sans-serif;
+				text-align: center;
+			}
+		</style>
+	
+<link rel="preload" href="/inn_solver-884763547f945f95_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/inn_solver-884763547f945f95.js"></head>
+
+	<body>
+		<canvas id="container"></canvas>
+	
+
+
+
+</body></html><!-- Powered by egui: https://github.com/emilk/egui/ -->
