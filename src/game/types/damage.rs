@@ -1,7 +1,8 @@
 use rand::Rng;
+use serde::Deserialize;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, PartialEq)]
 pub struct DamageRange {
     pub min: f32,
     pub max: f32,
@@ -109,7 +110,7 @@ impl From<f32> for DamageRange {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, PartialEq)]
 pub enum DamageType {
     Melee,
     Pierce,

@@ -2,6 +2,8 @@ use crate::game::entities::armors::Armor;
 use crate::game::entities::enemies::Challenge;
 use crate::game::game_manager::GameManager;
 use crate::game::types::dict::Dict;
+use crate::game::types::gear::Slot;
+use crate::gui::gear::GearSet;
 use crate::gui::stats_handler::StatsHandler;
 
 #[derive(Clone)]
@@ -24,11 +26,6 @@ impl GameOptions {
     }
 }
 
-#[derive(Clone)]
-pub struct AIOptions {
-    pub depth: String,
-}
-
 impl Default for GameOptions {
     fn default() -> Self {
         Self {
@@ -40,10 +37,50 @@ impl Default for GameOptions {
     }
 }
 
+#[derive(Clone)]
+pub struct AIOptions {
+    pub depth: String,
+}
+
 impl Default for AIOptions {
     fn default() -> Self {
         Self {
             depth: '4'.to_string(),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct GearOptions {
+    pub gear_sets: Vec<GearSet>,
+    pub current_set_index: Option<usize>,
+    pub slot: Slot,
+}
+
+impl Default for GearOptions {
+    fn default() -> Self {
+        Self {
+            gear_sets: Vec::new(),
+            current_set_index: None,
+            slot: Slot::Weapon,
+        }
+    }
+}
+
+impl GearOptions {
+    pub fn get_current_set(&self) -> Option<&GearSet> {
+        if let Some(index) = self.current_set_index {
+            return self.gear_sets.get(index);
+        }
+
+        None
+    }
+
+    pub fn get_current_set_mut(&mut self) -> Option<&mut GearSet> {
+        if let Some(index) = self.current_set_index {
+            return self.gear_sets.get_mut(index);
+        }
+
+        None
     }
 }

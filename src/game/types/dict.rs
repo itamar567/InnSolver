@@ -1,11 +1,12 @@
 use crate::game::types::damage::DamageType;
+use serde::{Deserialize, Deserializer};
 use std::collections::hash_map::{Iter, Keys};
 use std::collections::HashMap;
 use std::ops::Neg;
 
 // A HashMap wrapper for bonus and resistance dictionaries
 // Has shorter syntax, and a default value of 0
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Dict {
     // TODO: Use a faster hash algorithm
     map: HashMap<String, f32>,
@@ -86,6 +87,10 @@ impl Dict {
 
         data
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
 }
 
 impl Default for Dict {
@@ -105,6 +110,12 @@ impl<const N: usize> From<[(&str, f32); N]> for Dict {
     }
 }
 
+impl From<HashMap<String, f32>> for Dict {
+    fn from(value: HashMap<String, f32>) -> Self {
+        Self { map: value }
+    }
+}
+
 impl Neg for Dict {
     type Output = Dict;
 
@@ -115,5 +126,20 @@ impl Neg for Dict {
         }
 
         Dict { map }
+    }
+}
+
+impl<'de> Deserialize<'de> for Dict {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let result = HashMap::<String, f32>::deserialize(deserializer);
+
+        if let Ok(value) = result {
+            return Ok(Dict::from(value));
+        }
+
+        Err(result.err().unwrap())
     }
 }

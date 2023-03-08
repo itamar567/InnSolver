@@ -1,7 +1,9 @@
 use crate::game::game_manager::GameManager;
-use crate::game::types::dict::Dict;
 use crate::gui::options::GameOptions;
+use crate::gui::utils;
 use egui::{CollapsingHeader, Color32, Ui};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 struct GameHistoryManager {
     game: GameManager,
@@ -36,19 +38,15 @@ impl GameHistoryManager {
 
 pub struct InteractiveView {
     game: Option<GameHistoryManager>,
-    game_options: GameOptions,
+    game_options: Rc<RefCell<GameOptions>>,
 }
 
 impl InteractiveView {
-    pub fn new() -> Self {
+    pub fn new(game_options: Rc<RefCell<GameOptions>>) -> Self {
         Self {
             game: None,
-            game_options: GameOptions::default(),
+            game_options,
         }
-    }
-
-    pub fn configure(&mut self, game_options: GameOptions) {
-        self.game_options = game_options;
     }
 
     pub fn draw(&mut self, ui: &mut Ui) {
@@ -65,7 +63,9 @@ impl InteractiveView {
             ui.separator();
             self.draw_game(ui);
         } else {
-            self.game = Some(GameHistoryManager::new(self.game_options.create_game()));
+            self.game = Some(GameHistoryManager::new(
+                self.game_options.borrow().create_game(),
+            ));
         }
     }
 
@@ -146,7 +146,7 @@ impl InteractiveView {
                                 ui.collapsing("Bonuses", |ui| {
                                     let mut bonuses = entity.bonuses.clone();
                                     bonuses.merge(&entity.gear_bonuses);
-                                    Self::draw_dict(
+                                    utils::draw_dict(
                                         ui,
                                         &bonuses,
                                         format!("entity_details_bonuses_grid_{}", index),
@@ -157,7 +157,7 @@ impl InteractiveView {
                                 ui.collapsing("Resists", |ui| {
                                     let mut resists = entity.resists.clone();
                                     resists.merge(&entity.gear_bonuses);
-                                    Self::draw_dict(
+                                    utils::draw_dict(
                                         ui,
                                         &resists,
                                         format!("entity_details_resists_grid_{}", index),
@@ -181,7 +181,7 @@ impl InteractiveView {
                                 .show(ui, |ui| {
                                     if let Some(bonuses) = &effect.bonuses {
                                         ui.collapsing("Bonuses", |ui| {
-                                            Self::draw_dict(
+                                            utils::draw_dict(
                                                 ui,
                                                 bonuses,
                                                 format!("entity_{}_effect_bonuses_grid", index),
@@ -190,7 +190,7 @@ impl InteractiveView {
                                     }
                                     if let Some(resists) = &effect.resists {
                                         ui.collapsing("Resists", |ui| {
-                                            Self::draw_dict(
+                                            utils::draw_dict(
                                                 ui,
                                                 resists,
                                                 format!("entity_{}_effect_bonuses_grid", index),
@@ -231,15 +231,5 @@ impl InteractiveView {
                     });
                 }
             });
-    }
-
-    fn draw_dict(ui: &mut Ui, dict: &Dict, id_str: String) {
-        egui::Grid::new(id_str).num_columns(2).show(ui, |ui| {
-            for item in dict.iter_sorted() {
-                ui.label(format!("{}:", item.0));
-                ui.label(item.1.to_string());
-                ui.end_row();
-            }
-        });
     }
 }

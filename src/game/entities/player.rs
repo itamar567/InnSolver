@@ -2,7 +2,9 @@ use crate::game::entities::entity::Entity;
 use crate::game::entities::entity::EntityType::PlayerType;
 use crate::game::types::damage::{DamageRange, DamageType};
 use crate::game::types::dict::Dict;
+use crate::game::types::gear::{Item, Slot};
 use crate::game::types::skill::Skill;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Player {
@@ -12,6 +14,8 @@ pub struct Player {
 
     pub skills: Vec<Skill>,
     pub current_skill_index: Option<usize>,
+
+    pub items: HashMap<Slot, Item>,
 }
 
 impl Player {
@@ -33,6 +37,7 @@ impl Player {
             targeted_enemy_index: 0,
             skills,
             current_skill_index: None,
+            items: HashMap::new(),
         };
 
         result.base.recalculate_stat_bonuses(&stats);
@@ -75,5 +80,21 @@ impl Player {
 
     pub fn reset_current_skill(&mut self) {
         self.current_skill_index = None;
+    }
+
+    pub fn equip(&mut self, item: Item) {
+        self.unequip(item.slot);
+
+        self.base.bonuses.merge(&item.bonuses);
+        self.base.resists.merge(&item.resists);
+
+        self.items.insert(item.slot, item);
+    }
+
+    pub fn unequip(&mut self, slot: Slot) {
+        if let Some(item) = self.items.remove(&slot) {
+            self.base.bonuses.unmerge(&item.bonuses);
+            self.base.resists.unmerge(&item.resists);
+        }
     }
 }

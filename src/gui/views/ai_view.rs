@@ -2,22 +2,24 @@ use crate::ai::ai_communication::{AICommunicator, AI};
 use crate::game::game_manager::GameStatus;
 use crate::gui::options::{AIOptions, GameOptions};
 use egui::Ui;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct AIView {
     ai: Option<AICommunicator>,
     current_rotation: String,
 
-    game_options: GameOptions,
-    ai_options: AIOptions,
+    game_options: Rc<RefCell<GameOptions>>,
+    ai_options: Rc<RefCell<AIOptions>>,
 }
 
 impl AIView {
-    pub fn new() -> Self {
+    pub fn new(game_options: Rc<RefCell<GameOptions>>, ai_options: Rc<RefCell<AIOptions>>) -> Self {
         Self {
             ai: None,
             current_rotation: String::new(),
-            game_options: GameOptions::default(),
-            ai_options: AIOptions::default(),
+            game_options,
+            ai_options,
         }
     }
 
@@ -49,15 +51,10 @@ impl AIView {
         } else if ui.button("Start").clicked() {
             self.current_rotation.clear();
             self.ai = Some(AICommunicator::new(AI::new(
-                self.game_options.create_game(),
-                self.ai_options.depth.parse().unwrap(),
+                self.game_options.borrow().create_game(),
+                self.ai_options.borrow().depth.parse().unwrap(),
             )));
             self.ai.as_mut().unwrap().do_turn();
         }
-    }
-
-    pub fn configure(&mut self, game_options: GameOptions, ai_options: AIOptions) {
-        self.game_options = game_options;
-        self.ai_options = ai_options;
     }
 }
