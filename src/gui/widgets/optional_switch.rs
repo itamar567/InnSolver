@@ -51,7 +51,7 @@ pub(crate) fn switch(ui: &mut Ui, value: &mut OptionalBool) -> Response {
     if ui.is_rect_visible(rect) {
         let animation_pos = ui
             .ctx()
-            .animate_value_with_time(response.id, value.as_value(), 0.2);
+            .animate_value_with_time(response.id, value.as_value(), 0.15);
 
         let mut visuals = *ui.style().interact(&response);
         if let Some(val) = value.as_option() {
