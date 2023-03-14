@@ -18,11 +18,25 @@ impl GameManager {
         player: Box<dyn EntityTrait + Send>,
         enemies: Vec<Box<dyn EntityTrait + Send>>,
     ) -> GameManager {
-        GameManager {
+        let mut result = GameManager {
             player,
             enemies,
             turn: 1,
+        };
+
+        // Execute the `setup` function of all entities
+        result.player.setup(None, &mut result.enemies);
+        for enemy_index in 0..result.enemies.len() {
+            // We first remove the current enemy from `result.enemies` to avoid a double mutable borrow
+            let mut enemy = result.enemies.remove(enemy_index);
+
+            enemy.do_turn(Some(&mut result.player), &mut result.enemies);
+
+            // Insert the enemy back
+            result.enemies.insert(enemy_index, enemy);
         }
+
+        result
     }
 
     pub fn do_turn(&mut self) {
@@ -35,15 +49,15 @@ impl GameManager {
             .as_player()
             .update_skill_cooldowns();
 
-        for entity_index in 0..self.enemies.len() {
+        for enemy_index in 0..self.enemies.len() {
             // We first remove the current enemy from `self.enemies` to avoid a double mutable borrow
-            let mut enemy = self.enemies.remove(entity_index);
+            let mut enemy = self.enemies.remove(enemy_index);
 
             enemy.get_base_entity_mut().tick_effects();
             enemy.do_turn(Some(&mut self.player), &mut self.enemies);
 
             // Insert the enemy back
-            self.enemies.insert(entity_index, enemy);
+            self.enemies.insert(enemy_index, enemy);
         }
     }
 

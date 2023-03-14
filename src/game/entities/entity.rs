@@ -71,6 +71,13 @@ pub trait EntityTrait {
     fn get_base_type(&self) -> EntityRef;
 
     fn get_base_type_mut(&mut self) -> EntityMutRef;
+
+    fn setup(
+        &mut self,
+        _player: Option<&mut Box<dyn EntityTrait + Send>>,
+        _enemies: &mut Vec<Box<dyn EntityTrait + Send>>,
+    ) {
+    }
 }
 
 impl Clone for Box<dyn EntityTrait + Send> {

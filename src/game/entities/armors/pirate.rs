@@ -61,6 +61,39 @@ impl Pirate {
         self.base.base.attack(other, hits, attack_mana)
     }
 
+    // TODO: Use a variable instead
+    fn opening_effect(&self) -> Effect {
+        Effect::new(
+            "Opening",
+            Some("You spot an opening for extra hits on your next attack!".to_string()),
+            1,
+            None,
+            None,
+            None,
+            None,
+            false,
+        )
+    }
+
+    fn opening(
+        &mut self,
+        other: &mut Entity,
+        bonuses: Option<Dict>,
+        before_hit_effects: Option<Vec<Effect>>,
+        after_hit_effects: Option<Vec<Effect>>,
+    ) {
+        if !other.effects.contains(&self.opening_effect()) {
+            return;
+        }
+
+        let hits =
+            self.base
+                .base
+                .generate_hits(2, 1.0, bonuses, before_hit_effects, after_hit_effects);
+
+        self.base.base.attack(other, hits, false);
+    }
+
     fn skill_fury_of_the_high_seas(&mut self, entity: &mut Entity) {
         self.base.base.add_effect(Effect::new(
             "Fury",
@@ -73,12 +106,14 @@ impl Pirate {
             false,
         ));
 
+        self.opening(entity, None, None, None);
+
         let hits = self.base.base.generate_hits(6, 1.75, None, None, None);
 
         self.attack(entity, hits, false)
     }
 
-    fn skill_lime_aid(&mut self) {
+    fn skill_lime_aid(&mut self, entity: &mut Entity) {
         for (index, effect) in self.base.base.effects.clone().iter().enumerate().rev() {
             if effect.name != "Stuffed" {
                 self.base.base.remove_effect(index);
@@ -98,51 +133,57 @@ impl Pirate {
             None,
             false,
         ));
+
+        self.opening(entity, None, None, None);
     }
 
     fn skill_summon_crackers(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
-            2,
-            1.0,
+        let after_hit_effects = Some(vec![Effect::new(
+            "Go For The Eyes",
+            None,
+            3,
+            Some(Dict::from([("bonus", -80.0)])),
             None,
             None,
-            Some(vec![Effect::new(
-                "Go For The Eyes",
-                None,
-                3,
-                Some(Dict::from([("bonus", 80.0)])),
-                None,
-                None,
-                None,
-                false,
-            )]),
-        );
+            None,
+            false,
+        )]);
+
+        self.opening(entity, None, None, after_hit_effects.clone());
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(2, 1.0, None, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
 
     fn skill_help_from_the_locker(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
-            3,
-            1.65,
+        let after_hit_effects = Some(vec![Effect::new(
+            "Sunken Crew's Curse",
+            None,
+            4,
+            Some(Dict::from([("crit", -30.0)])),
+            Some(Dict::from([("all", -30.0), ("health", 30.0)])),
             None,
             None,
-            Some(vec![Effect::new(
-                "Sunken Crew's Curse",
-                None,
-                4,
-                Some(Dict::from([("crit", -30.0)])),
-                Some(Dict::from([("all", -30.0), ("health", 30.0)])),
-                None,
-                None,
-                false,
-            )]),
-        );
+            false,
+        )]);
+
+        self.opening(entity, None, None, after_hit_effects.clone());
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(3, 1.65, None, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
 
-    fn skill_quick_shot(&mut self, entities: Vec<&mut Entity>) {
+    fn skill_quick_shot(&mut self, mut entities: Vec<&mut Entity>) {
+        self.opening(entities[self.base.targeted_enemy_index], None, None, None);
+
         let hits = self.base.base.generate_hits(1, 1.3, None, None, None);
 
         for entity in entities {
@@ -151,27 +192,28 @@ impl Pirate {
     }
 
     fn skill_dirty_trick(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
+        let after_hit_effects = Some(vec![Effect::new(
+            "Unsteady",
+            None,
             3,
-            1.5,
             None,
             None,
-            Some(vec![Effect::new(
-                "Unsteady",
-                None,
-                3,
-                None,
-                None,
-                None,
-                Some(Stun::Normal),
-                false,
-            )]),
-        );
+            None,
+            Some(Stun::Normal),
+            false,
+        )]);
+
+        self.opening(entity, None, None, None);
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(3, 1.5, None, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
 
-    fn skill_sealegs(&mut self) {
+    fn skill_sealegs(&mut self, entity: &mut Entity) {
         self.base.base.add_effect(Effect::new(
             "Sealegs",
             None,
@@ -186,17 +228,21 @@ impl Pirate {
             None,
             false,
         ));
+
+        self.opening(entity, None, None, None);
     }
 
     fn skill_attack(&mut self, entity: &mut Entity) {
         self.base.base.mp += 15;
+
+        self.opening(entity, None, None, None);
 
         let hits = self.base.base.generate_hits(1, 1.25, None, None, None);
 
         self.attack(entity, hits, false);
     }
 
-    fn skill_backstab(&mut self) {
+    fn skill_backstab(&mut self, entity: &mut Entity) {
         self.base.base.add_effect(Effect::new(
             "Retaliate against your target!",
             None,
@@ -213,101 +259,111 @@ impl Pirate {
         ));
 
         self.retaliation = true; // TODO: Implement retaliation
+
+        self.opening(entity, None, None, None);
     }
 
     fn skill_to_the_plank(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
+        let after_hit_effects = Some(vec![Effect::new(
+            "Planked",
+            None,
             3,
-            1.2,
+            Some(Dict::from([("boost", -50.0)])),
             None,
             None,
-            Some(vec![Effect::new(
-                "Planked",
-                None,
-                3,
-                Some(Dict::from([("boost", -50.0)])),
-                None,
-                None,
-                None,
-                false,
-            )]),
-        );
+            None,
+            false,
+        )]);
+
+        self.opening(entity, None, None, after_hit_effects.clone());
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(3, 1.2, None, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
 
     fn skill_avast(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
-            1,
-            1.0,
+        let after_hit_effects = Some(vec![Effect::new(
+            "Dire Straits",
+            None,
+            4,
             None,
             None,
-            Some(vec![Effect::new(
-                "Dire Straits",
-                None,
-                4,
-                None,
-                None,
-                Some(self.base.base.generate_dot(self.base.base.dmg, true) / 2.0),
-                None,
-                false,
-            )]),
-        );
+            Some(self.base.base.generate_dot(self.base.base.dmg, true) / 2.0),
+            None,
+            false,
+        )]);
+
+        self.opening(entity, None, None, after_hit_effects.clone());
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(1, 1.0, None, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
 
     fn skill_target_practice(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
-            2,
-            0.55,
+        let after_hit_effects = Some(vec![Effect::new(
+            "Pierced",
+            None,
+            4,
+            Some(Dict::from([
+                ("melee_def", -150.0),
+                ("pierce_def", -150.0),
+                ("magic_def", -150.0),
+                ("block", -150.0),
+                ("parry", -150.0),
+                ("dodge", -150.0),
+            ])),
             None,
             None,
-            Some(vec![Effect::new(
-                "Pierced",
-                None,
-                4,
-                Some(Dict::from([
-                    ("melee_def", -150.0),
-                    ("pierce_def", -150.0),
-                    ("magic_def", -150.0),
-                    ("block", -150.0),
-                    ("parry", -150.0),
-                    ("dodge", -150.0),
-                ])),
-                None,
-                None,
-                None,
-                false,
-            )]),
-        );
+            None,
+            false,
+        )]);
+
+        self.opening(entity, None, None, after_hit_effects.clone());
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(2, 0.55, None, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
 
     fn skill_flintlock(&mut self, entity: &mut Entity) {
+        self.opening(entity, None, None, None);
+
         let hits = self.base.base.generate_hits(2, 2.0, None, None, None);
 
         self.attack(entity, hits, false)
     }
 
     fn skill_fire_the_broadsides(&mut self, entity: &mut Entity) {
-        let hits = self.base.base.generate_hits(
-            1,
-            2.0,
-            Some(Dict::from([("crit", 200.0)])),
+        let after_hit_effects = Some(vec![Effect::new(
+            "Resounding Cannonade",
             None,
-            Some(vec![Effect::new(
-                "Resounding Cannonade",
-                None,
-                5,
-                Some(Dict::from([("boost", -20.0), ("bonus", -20.0)])),
-                None,
-                None,
-                None,
-                false,
-            )]),
-        );
+            5,
+            Some(Dict::from([("boost", -20.0), ("bonus", -20.0)])),
+            None,
+            None,
+            None,
+            false,
+        )]);
+
+        let hit_bonuses = Some(Dict::from([("crit", 200.0)]));
+
+        self.opening(entity, hit_bonuses.clone(), None, after_hit_effects.clone());
+
+        let hits = self
+            .base
+            .base
+            .generate_hits(1, 2.0, hit_bonuses, None, after_hit_effects);
 
         self.attack(entity, hits, false);
     }
@@ -330,6 +386,8 @@ impl Pirate {
         ));
 
         // TODO: Add an HP/MP potion
+
+        self.opening(entity, None, None, None);
 
         let hits = self.base.base.generate_hits(1, 2.0, None, None, None);
         self.attack(entity, hits, false)
@@ -368,13 +426,13 @@ impl EntityTrait for Pirate {
             let entity = entities[self.base.targeted_enemy_index].get_base_entity_mut();
             match skill {
                 0 => self.skill_fury_of_the_high_seas(entity),
-                1 => self.skill_lime_aid(),
+                1 => self.skill_lime_aid(entity),
                 2 => self.skill_summon_crackers(entity),
                 3 => self.skill_help_from_the_locker(entity),
                 5 => self.skill_dirty_trick(entity),
-                6 => self.skill_sealegs(),
+                6 => self.skill_sealegs(entity),
                 7 => self.skill_attack(entity),
-                8 => self.skill_backstab(),
+                8 => self.skill_backstab(entity),
                 9 => self.skill_to_the_plank(entity),
                 10 => self.skill_avast(entity),
                 11 => self.skill_target_practice(entity),
@@ -392,5 +450,15 @@ impl EntityTrait for Pirate {
 
     fn get_base_type_mut(&mut self) -> EntityMutRef {
         PlayerMutRef(&mut self.base)
+    }
+
+    fn setup(
+        &mut self,
+        _player: Option<&mut Box<dyn EntityTrait + Send>>,
+        enemies: &mut Vec<Box<dyn EntityTrait + Send>>,
+    ) {
+        enemies[self.base.targeted_enemy_index]
+            .get_base_entity_mut()
+            .add_effect(self.opening_effect());
     }
 }
